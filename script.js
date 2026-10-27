@@ -23,18 +23,18 @@ const sectores = [
     { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
     { nombre: "X", tipo: "nada", color: "#760b12" },
     { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
-    { nombre: "$1K", tipo: "premio1000", color: "#fff000" },
+    { nombre: "$1.000", tipo: "premio1000", color: "#fff000" },
     { nombre: "X", tipo: "nada", color: "#760b12" },
     { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
     { nombre: "X", tipo: "nada", color: "#760b12" },
     { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
     { nombre: "X", tipo: "nada", color: "#760b12" },
-    { nombre: "$1K", tipo: "premio1000", color: "#fff000" },
+    { nombre: "$1.000", tipo: "premio1000", color: "#fff000" },
     { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
     { nombre: "X", tipo: "nada", color: "#760b12" },
-    { nombre: "$1K", tipo: "premio1000", color: "#fff000" },
+    { nombre: "$1.000", tipo: "premio1000", color: "#fff000" },
     { nombre: "X", tipo: "nada", color: "#760b12" },
-    { nombre: "PREMIO MAYOR", tipo: "mayor", color: "#17f05b" }
+    { nombre: "MAYOR", tipo: "mayor", color: "#39ff14" }
 ];
 
 const mensajes = {
@@ -86,10 +86,22 @@ function tono(frecuencia, duracion = 0.12, tipo = "sine", volumen = 0.045, retra
 function sonidoBoton() { tono(520, .07, "square", .025); tono(760, .08, "sine", .025, .06); }
 function sonidoGiro() {
     sonidoBoton();
-    // Pequeños clics durante el giro para dar sensación de ruleta mecánica.
-    for (let i = 0; i < 18; i++) tono(180 + (i % 3) * 45, .025, "square", .012, i * .19);
+    // Clics cada vez más espaciados para acompañar la desaceleración.
+    let retraso = 0;
+    for (let i = 0; i < 24; i++) {
+        retraso += 0.075 + (i / 24) * 0.15;
+        tono(180 + (i % 3) * 45, .045, "square", .035, retraso);
+    }
 }
-function sonidoPremio() { [523, 659, 784, 1047].forEach((f, i) => tono(f, .24, "triangle", .055, i * .13)); }
+function sonidoPremio() {
+    // Fanfarrias ascendentes, más largas y con mayor presencia.
+    [392, 494, 587, 784, 988, 1175, 1568].forEach((f, i) =>
+        tono(f, .42, "triangle", .095, i * .11)
+    );
+    [784, 988, 1175].forEach((f, i) =>
+        tono(f, .7, "sine", .055, .72 + i * .16)
+    );
+}
 function sonidoPerdida() { tono(240, .18, "sawtooth", .025); tono(170, .24, "sawtooth", .02, .14); }
 
 function formatoPlata(cantidad) {
@@ -111,9 +123,10 @@ function crearSectores() {
         gradientes.push(`${sector.color} ${indice * angulo}deg ${(indice + 1) * angulo}deg`);
 
         const etiqueta = document.createElement("div");
-        etiqueta.className = "etiqueta-sector";
+        etiqueta.className = `etiqueta-sector sector-${sector.tipo}`;
         etiqueta.textContent = sector.nombre;
-        etiqueta.style.transform = `rotate(${indice * angulo + angulo / 2}deg) translateX(18px)`;
+        // Las etiquetas quedan sobre el radio de cada porción, no en el centro.
+        etiqueta.style.transform = `rotate(${indice * angulo + angulo / 2}deg) translateX(78px) rotate(90deg)`;
         ruleta.appendChild(etiqueta);
     });
 
@@ -228,7 +241,7 @@ function girarRuleta() {
         }
 
         actualizarPanel();
-    }, 4100);
+    }, 5900);
 }
 
 function tocarRegalo() {
