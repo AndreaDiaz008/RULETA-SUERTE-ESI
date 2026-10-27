@@ -317,3 +317,94 @@ body.celebrando { background: #4c237b; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Estética arcade/neón para una ruleta más llamativa */
+body {
+    background: radial-gradient(ellipse at top, #39205f 0%, #151026 48%, #090912 100%);
+    background-attachment: fixed;
+}
+.contenedor { max-width: 520px; }
+.etiqueta-esi {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid #ffea00;
+    border-radius: 999px;
+    color: #ffea00;
+    background: #ffea0012;
+    box-shadow: 0 0 16px #ffea0033;
+}
+h1 {
+    color: #fff;
+    text-shadow: 0 0 8px #ff00d4, 0 0 22px #8c35ff, 3px 3px 0 #ff3b64;
+    animation: tituloLatido 2.4s ease-in-out infinite alternate;
+}
+.subtitulo { color: #e7d9ff; }
+.panel-plata {
+    border: 2px solid #7a48ff;
+    background: linear-gradient(120deg, #27144be8, #151a35e8);
+    box-shadow: 0 0 20px #7a48ff30, inset 0 0 18px #ff00d410;
+}
+.panel-plata strong { color: #ffea00; text-shadow: 0 0 12px #ffea0070; }
+.aviso {
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: #ffffff0b;
+    border: 1px solid #ffffff18;
+}
+.ruleta-contenedor {
+    width: min(78vw, 330px);
+    height: min(78vw, 330px);
+    margin-top: 12px;
+    filter: drop-shadow(0 0 12px #00c8ff65);
+}
+.ruleta {
+    border: 9px solid #151a31;
+    outline: 5px solid #00d9ff;
+    box-shadow: 0 0 0 9px #f7e600, 0 0 30px #00d9ff9c, inset 0 0 0 3px #ffffffb0;
+    transition: transform 4.5s cubic-bezier(.08, .76, .08, 1);
+}
+.etiqueta-sector {
+    width: 34%;
+    height: 28px;
+    margin-top: -14px;
+    padding-left: 12px;
+    font-size: clamp(9px, 2.7vw, 14px);
+    color: #fff;
+    text-shadow: 1px 2px 0 #000, 0 0 8px #000;
+}
+.puntero {
+    top: -14px;
+    border-left-width: 19px;
+    border-right-width: 19px;
+    border-top: 37px solid #ff315a;
+    filter: drop-shadow(0 0 5px #ff315a) drop-shadow(0 3px 2px #000);
+}
+.centro {
+    width: 56px;
+    height: 56px;
+    border: 5px solid #00e5ff;
+    background: radial-gradient(circle, #33205f, #0d1024);
+    box-shadow: 0 0 0 4px #ffea00, 0 0 20px #00e5ff;
+}
+button {
+    color: #151026;
+    background: linear-gradient(100deg, #fff000, #ff9d00);
+    box-shadow: 0 5px 0 #9a4b00, 0 0 18px #ffb00055;
+}
+button:hover:not(:disabled) { transform: translateY(-2px) scale(1.025); filter: brightness(1.12); }
+button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #9a4b00; }
+.boton-secundario { background: linear-gradient(100deg, #ff4ad8, #9f5bff); color: #fff; box-shadow: 0 5px 0 #4c258e, 0 0 18px #ff4ad855; }
+.boton-reiniciar { background: linear-gradient(100deg, #00e5ff, #68ff9a); }
+.resultado h2 { text-shadow: 0 0 12px #ff00d455; }
+.pie { color: #c7badf; }
+body.celebrando { background: radial-gradient(circle, #6b1b91, #140c2b 75%); }
+.regalo { animation: regaloFlota 1.3s ease-in-out infinite alternate; }
+.regalo.rebote { animation: rebote .55s ease; }
+@keyframes tituloLatido { from { transform: scale(1); } to { transform: scale(1.025); } }
+@keyframes regaloFlota { from { translate: 0 0; } to { translate: 0 -8px; } }
+@media (max-height: 760px) {
+    .ruleta-contenedor { width: min(55vh, 285px); height: min(55vh, 285px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    h1, .regalo { animation: none !important; }
+}
