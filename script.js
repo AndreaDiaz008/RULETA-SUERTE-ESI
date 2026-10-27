@@ -18,8 +18,6 @@ const DINERO_INICIAL = 10000;
 const COSTO_SUERTE = 1000;
 const COSTO_GIRO = 2000;
 
-// Colores: X bordó, $500 naranja, $1.000 amarillo,
-// y el premio mayor exclusivamente verde neón.
 const sectores = [
     { nombre: "X", tipo: "nada", color: "#760b12" },
     { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
@@ -68,20 +66,11 @@ let juegoTerminado = false;
 let toquesRegalo = 0;
 let regaloAbierto = false;
 
-// Sonidos generados directamente por el navegador.
 let contextoAudio = null;
 
-function tono(
-    frecuencia,
-    duracion = 0.12,
-    tipo = "sine",
-    volumen = 0.12,
-    retraso = 0
-) {
+function tono(frecuencia, duracion = 0.12, tipo = "sine", volumen = 0.12, retraso = 0) {
     try {
-        contextoAudio ||= new (
-            window.AudioContext || window.webkitAudioContext
-        )();
+        contextoAudio ||= new (window.AudioContext || window.webkitAudioContext)();
 
         if (contextoAudio.state === "suspended") {
             contextoAudio.resume();
@@ -91,9 +80,7 @@ function tono(
         const ganancia = contextoAudio.createGain();
         const compresor = contextoAudio.createDynamicsCompressor();
 
-        compresor.threshold.setValueAtTime(
-            -18, contextoAudio.currentTime
-        );
+        compresor.threshold.setValueAtTime(-18, contextoAudio.currentTime);
         compresor.knee.setValueAtTime(20, contextoAudio.currentTime);
         compresor.ratio.setValueAtTime(5, contextoAudio.currentTime);
         compresor.attack.setValueAtTime(0.003, contextoAudio.currentTime);
@@ -101,7 +88,8 @@ function tono(
 
         oscilador.type = tipo;
         oscilador.frequency.setValueAtTime(
-            frecuencia, contextoAudio.currentTime + retraso
+            frecuencia,
+            contextoAudio.currentTime + retraso
         );
 
         ganancia.gain.setValueAtTime(
@@ -119,11 +107,9 @@ function tono(
         compresor.connect(contextoAudio.destination);
 
         oscilador.start(contextoAudio.currentTime + retraso);
-        oscilador.stop(
-            contextoAudio.currentTime + retraso + duracion
-        );
+        oscilador.stop(contextoAudio.currentTime + retraso + duracion);
     } catch (e) {
-        // El juego sigue funcionando si el navegador bloquea el audio.
+        // El juego funciona aunque el navegador bloquee el audio.
     }
 }
 
@@ -135,23 +121,15 @@ function sonidoBoton() {
 function sonidoGiro() {
     sonidoBoton();
 
-    // Clics que acompañan la desaceleración de la ruleta.
     let retraso = 0;
 
     for (let i = 0; i < 24; i++) {
         retraso += 0.075 + (i / 24) * 0.15;
-        tono(
-            180 + (i % 3) * 45,
-            0.055,
-            "square",
-            0.075,
-            retraso
-        );
+        tono(180 + (i % 3) * 45, 0.055, "square", 0.075, retraso);
     }
 }
 
 function sonidoPremio() {
-    // Fanfarrias ascendentes para el premio mayor.
     [392, 494, 587, 784, 988, 1175, 1568].forEach((f, i) => {
         tono(f, 0.48, "triangle", 0.16, i * 0.11);
     });
@@ -181,32 +159,39 @@ function actualizarPanel() {
         girando || juegoTerminado || dinero < COSTO_GIRO;
 }
 
+
 function crearSectores() {
     const gradientes = [];
     const angulo = 360 / sectores.length;
 
     sectores.forEach((sector, indice) => {
+        const inicio = indice * angulo;
+        const fin = (indice + 1) * angulo;
+
         gradientes.push(
-            `${sector.color} ${indice * angulo}deg ${(indice + 1) * angulo}deg`
+            `${sector.color} ${inicio}deg ${fin}deg`
         );
 
         const etiqueta = document.createElement("div");
         etiqueta.className = `etiqueta-sector sector-${sector.tipo}`;
         etiqueta.textContent = sector.nombre;
 
-        // Posiciona cada etiqueta dentro de su propio sector.
-        const anguloCentro =
-            (-90 + indice * angulo + angulo / 2) * Math.PI / 180;
+        const centroGrados = inicio + angulo / 2;
+        const centroRadianes =
+            (centroGrados - 90) * Math.PI / 180;
 
-        const radio = 33;
+        const radio = 34;
 
         etiqueta.style.left =
-            `${50 + Math.cos(anguloCentro) * radio}%`;
+            `${50 + Math.cos(centroRadianes) * radio}%`;
 
         etiqueta.style.top =
-            `${50 + Math.sin(anguloCentro) * radio}%`;
+            `${50 + Math.sin(centroRadianes) * radio}%`;
 
         etiqueta.style.transform = "translate(-50%, -50%)";
+        etiqueta.style.margin = "0";
+        etiqueta.style.padding = "0 2px";
+        etiqueta.style.transformOrigin = "center";
 
         ruleta.appendChild(etiqueta);
     });
@@ -223,7 +208,8 @@ function elegirSector() {
     ];
 
     const total = opciones.reduce(
-        (suma, opcion) => suma + opcion.peso, 0
+        (suma, opcion) => suma + opcion.peso,
+        0
     );
 
     let numero = Math.random() * total;
@@ -231,9 +217,7 @@ function elegirSector() {
     for (const opcion of opciones) {
         numero -= opcion.peso;
 
-        if (numero < 0) {
-            return opcion.tipo;
-        }
+        if (numero < 0) return opcion.tipo;
     }
 
     return "nada";
@@ -266,9 +250,7 @@ function comprarSuerte() {
         girando ||
         juegoTerminado ||
         dinero < COSTO_SUERTE
-    ) {
-        return;
-    }
+    ) return;
 
     sonidoBoton();
 
@@ -285,9 +267,7 @@ function comprarSuerte() {
     aviso.textContent =
         "¿Sentís que ahora tenés más posibilidades? Esa confianza también puede hacerte arriesgar más.";
 
-    if (dinero < COSTO_GIRO) {
-        finalizarJuego();
-    }
+    if (dinero < COSTO_GIRO) finalizarJuego();
 }
 
 function girarRuleta() {
@@ -295,16 +275,12 @@ function girarRuleta() {
         girando ||
         juegoTerminado ||
         dinero < COSTO_GIRO
-    ) {
-        return;
-    }
+    ) return;
 
     girando = true;
     sonidoGiro();
     dinero -= COSTO_GIRO;
 
-    // El último giro se fuerza al premio mayor como parte
-    // del mensaje educativo sobre la expectativa de ganar.
     const esUltimoGiro = dinero < COSTO_GIRO;
 
     const tipoResultado = esUltimoGiro
@@ -318,7 +294,7 @@ function girarRuleta() {
         indiceVisual * anguloSector + anguloSector / 2;
 
     const anguloObjetivo =
-        (270 - centroSector + 360) % 360;
+        (360 - centroSector) % 360;
 
     const anguloActual =
         ((rotacion % 360) + 360) % 360;
@@ -326,7 +302,6 @@ function girarRuleta() {
     const ajuste =
         (anguloObjetivo - anguloActual + 360) % 360;
 
-    // Seis vueltas completas más el ajuste al sector elegido.
     rotacion += 360 * 6 + ajuste;
 
     ruleta.style.transform = `rotate(${rotacion}deg)`;
@@ -334,6 +309,7 @@ function girarRuleta() {
     actualizarPanel();
 
     titulo.textContent = "Girando...";
+
     texto.textContent =
         "La expectativa crece mientras esperás el resultado.";
 
@@ -344,13 +320,8 @@ function girarRuleta() {
     window.setTimeout(() => {
         girando = false;
 
-        if (tipoResultado === "premio500") {
-            dinero += 500;
-        }
-
-        if (tipoResultado === "premio1000") {
-            dinero += 1000;
-        }
+        if (tipoResultado === "premio500") dinero += 500;
+        if (tipoResultado === "premio1000") dinero += 1000;
 
         if (tipoResultado === "mayor") {
             sonidoPremio();
@@ -393,19 +364,16 @@ function girarRuleta() {
                 ? "¿Vas a parar o vas a arriesgar lo que te queda?"
                 : "Ya no te alcanza para otro giro.";
 
-            if (dinero < COSTO_GIRO) {
-                finalizarJuego();
-            }
+            if (dinero < COSTO_GIRO) finalizarJuego();
         }
 
         actualizarPanel();
-    }, 5900);
+    }, 6500);
 }
 
+
 function tocarRegalo() {
-    if (regaloAbierto) {
-        return;
-    }
+    if (regaloAbierto) return;
 
     toquesRegalo += 1;
 
@@ -420,8 +388,8 @@ function tocarRegalo() {
             `¡Casi! Tocá ${4 - toquesRegalo} vez/veces más para abrirlo.`;
     } else {
         regaloAbierto = true;
-        sonidoPremio();
 
+        sonidoPremio();
         regalo.classList.add("abierto");
 
         instruccionRegalo.textContent =
@@ -482,6 +450,7 @@ actualizarPanel();
 botonSuerte.addEventListener("click", comprarSuerte);
 botonGirar.addEventListener("click", girarRuleta);
 botonReiniciar.addEventListener("click", reiniciarJuego);
+
 regalo.addEventListener("click", tocarRegalo);
 
 regalo.addEventListener("keydown", evento => {
