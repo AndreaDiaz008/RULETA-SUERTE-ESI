@@ -19,19 +19,27 @@ const COSTO_GIRO = 2000;
 
 // La suerte modifica las probabilidades, pero nunca garantiza ganar.
 const sectores = [
-    { nombre: "X", tipo: "nada", color: "#535b62" },
-    { nombre: "$500", tipo: "premio500", color: "#267c54" },
-    { nombre: "X", tipo: "nada", color: "#535b62" },
-    { nombre: "$1.000", tipo: "premio1000", color: "#267c54" },
-    { nombre: "X", tipo: "nada", color: "#535b62" },
-    { nombre: "PREMIO\nMAYOR", tipo: "mayor", color: "#c08b2c" },
-    { nombre: "X", tipo: "nada", color: "#535b62" },
-    { nombre: "$500", tipo: "premio500", color: "#267c54" }
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
+    { nombre: "$1K", tipo: "premio1000", color: "#fff000" },
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "$1K", tipo: "premio1000", color: "#fff000" },
+    { nombre: "$500", tipo: "premio500", color: "#ff7a00" },
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "$1K", tipo: "premio1000", color: "#fff000" },
+    { nombre: "X", tipo: "nada", color: "#760b12" },
+    { nombre: "PREMIO MAYOR", tipo: "mayor", color: "#17f05b" }
 ];
 
 const mensajes = {
     nada: [
-        "No ganaste nada. ¿Y si volvés a probar para recuperar lo perdido?",
+        "No ganaste nada. ¿Valdrá la pena volver a intentarlo?",
         "Esta vez no hubo premio. Seguir jugando tampoco garantiza uno.",
         "La ruleta se llevó el costo del giro. ¿Vale la pena intentarlo otra vez?"
     ],
@@ -57,6 +65,32 @@ let girando = false;
 let juegoTerminado = false;
 let toquesRegalo = 0;
 let regaloAbierto = false;
+
+// Sonidos sintetizados en el navegador: no hace falta descargar archivos de audio.
+let contextoAudio = null;
+function tono(frecuencia, duracion = 0.12, tipo = "sine", volumen = 0.045, retraso = 0) {
+    try {
+        contextoAudio ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (contextoAudio.state === "suspended") contextoAudio.resume();
+        const oscilador = contextoAudio.createOscillator();
+        const ganancia = contextoAudio.createGain();
+        oscilador.type = tipo;
+        oscilador.frequency.setValueAtTime(frecuencia, contextoAudio.currentTime + retraso);
+        ganancia.gain.setValueAtTime(volumen, contextoAudio.currentTime + retraso);
+        ganancia.gain.exponentialRampToValueAtTime(0.001, contextoAudio.currentTime + retraso + duracion);
+        oscilador.connect(ganancia); ganancia.connect(contextoAudio.destination);
+        oscilador.start(contextoAudio.currentTime + retraso);
+        oscilador.stop(contextoAudio.currentTime + retraso + duracion);
+    } catch (e) { /* El juego funciona igual si el navegador bloquea el audio. */ }
+}
+function sonidoBoton() { tono(520, .07, "square", .025); tono(760, .08, "sine", .025, .06); }
+function sonidoGiro() {
+    sonidoBoton();
+    // Pequeños clics durante el giro para dar sensación de ruleta mecánica.
+    for (let i = 0; i < 18; i++) tono(180 + (i % 3) * 45, .025, "square", .012, i * .19);
+}
+function sonidoPremio() { [523, 659, 784, 1047].forEach((f, i) => tono(f, .24, "triangle", .055, i * .13)); }
+function sonidoPerdida() { tono(240, .18, "sawtooth", .025); tono(170, .24, "sawtooth", .02, .14); }
 
 function formatoPlata(cantidad) {
     return "$" + cantidad.toLocaleString("es-AR");
@@ -125,6 +159,7 @@ function finalizarJuego() {
 function comprarSuerte() {
     if (girando || juegoTerminado || dinero < COSTO_SUERTE) return;
 
+    sonidoBoton();
     dinero -= COSTO_SUERTE;
     suerte += 1;
     actualizarPanel();
@@ -139,6 +174,7 @@ function girarRuleta() {
     if (girando || juegoTerminado || dinero < COSTO_GIRO) return;
 
     girando = true;
+    sonidoGiro();
     dinero -= COSTO_GIRO;
 
     // El giro que deja menos de $2.000 (o exactamente $0) se fuerza al premio mayor.
@@ -169,6 +205,7 @@ function girarRuleta() {
         if (tipoResultado === "premio1000") dinero += 1000;
 
         if (tipoResultado === "mayor") {
+            sonidoPremio();
             titulo.textContent = "¡PREMIO MAYOR!";
             texto.textContent = "¡Lo conseguiste! ¿Pero cuánto dinero gastaste para llegar a este momento?";
             aviso.textContent = "Tocá el regalo para descubrir el mensaje final.";
@@ -179,7 +216,8 @@ function girarRuleta() {
             botonGirar.hidden = true;
             botonReiniciar.hidden = true;
         } else {
-            titulo.textContent = tipoResultado === "nada" ? "¡X! NO GANASTE" :
+            if (tipoResultado === "nada") sonidoPerdida(); else tono(720, .16, "triangle", .04);
+            titulo.textContent = tipoResultado === "nada" ? "NO GANASTE NADA" :
                 tipoResultado === "premio500" ? "¡GANASTE $500!" : "¡GANASTE $1.000!";
             const lista = mensajes[tipoResultado];
             texto.textContent = lista[Math.floor(Math.random() * lista.length)];
@@ -196,6 +234,7 @@ function girarRuleta() {
 function tocarRegalo() {
     if (regaloAbierto) return;
     toquesRegalo += 1;
+    tono(360 + toquesRegalo * 100, .1, "triangle", .04);
 
     if (toquesRegalo < 4) {
         regalo.classList.remove("rebote");
@@ -204,6 +243,7 @@ function tocarRegalo() {
         instruccionRegalo.textContent = `¡Casi! Tocá ${4 - toquesRegalo} vez/veces más para abrirlo.`;
     } else {
         regaloAbierto = true;
+        sonidoPremio();
         regalo.classList.add("abierto");
         instruccionRegalo.textContent = "El premio tenía algo más para decirte…";
         window.setTimeout(() => {
